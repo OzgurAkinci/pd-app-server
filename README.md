@@ -35,5 +35,3 @@ localhost:8080/home
 When accessing home must include a token in the header and use get method.
 
 Enjoy!
-
-Tutorial by https://ilmucoding.com/
