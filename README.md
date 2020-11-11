@@ -1,26 +1,18 @@
-# Tutorial Auth Codeigniter 4 With JWT
+# PD Application Server - Codeigniter 4
 
 Please follow my instructions:
 
-Step 1 - Clone Project
-
-git clone https://github.com/wildanfuady/codeigniter-4-auth-with-jwt.git
-
-Step 2 - Create Database
+Step 1 - Create Database
 
 Please create a database named ci4_auth_jwt
 
-Step 3 - Config Environment
-
-Rename the .env.example file to .env
-
-Step 4 - Migrate Table Users
+Step 2 - Migrate Table Users
 
 Follow this command through the terminal:
 
 php spark migrate
 
-Step 5 - Testing
+Step 3 - Testing
 
 Follow this command through the terminal:
 
