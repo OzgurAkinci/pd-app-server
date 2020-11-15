@@ -4,7 +4,7 @@ class Home extends BaseController
 {
 	public function index()
 	{
-		return "app start..";
+		return view('welcome_message');
 	}
 
 	//--------------------------------------------------------------------

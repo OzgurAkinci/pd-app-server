@@ -39,7 +39,6 @@
 
 namespace CodeIgniter\Log\Handlers;
 
-use CodeIgniter\Events\Events;
 use CodeIgniter\HTTP\ResponseInterface;
 use Config\Services;
 
@@ -122,8 +121,6 @@ class ChromeLoggerHandler extends BaseHandler implements HandlerInterface
 		$request = Services::request(null, true);
 
 		$this->json['request_uri'] = (string) $request->uri;
-
-		Events::on('post_controller', [$this, 'sendLogs'], EVENT_PRIORITY_HIGH);
 	}
 
 	//--------------------------------------------------------------------
@@ -163,10 +160,12 @@ class ChromeLoggerHandler extends BaseHandler implements HandlerInterface
 		}
 
 		$this->json['rows'][] = [
-			$message,
+			[$message],
 			$backtraceMessage,
 			$type,
 		];
+
+		$this->sendLogs();
 
 		return true;
 	}

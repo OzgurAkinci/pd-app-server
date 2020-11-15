@@ -475,13 +475,11 @@ if (! function_exists('safe_mailto'))
 			$output .= 'l[' . $i . "] = '" . $x[$i] . "';";
 		}
 
-		$output .= 'for (var i = l.length-1; i >= 0; i=i-1) {'
+		return $output . ('for (var i = l.length-1; i >= 0; i=i-1) {'
 				. "if (l[i].substring(0, 1) === '|') document.write(\"&#\"+unescape(l[i].substring(1))+\";\");"
 				. 'else document.write(unescape(l[i]));'
 				. '}'
-				. '</script>';
-
-		return $output;
+				. '</script>');
 	}
 }
 
@@ -603,7 +601,6 @@ if (! function_exists('url_title'))
 		$str = strip_tags($str);
 		foreach ($trans as $key => $val)
 		{
-			//			$str = preg_replace('#'.$key.'#i'.( UTF8_ENABLED ? 'u' : ''), $val, $str);
 			$str = preg_replace('#' . $key . '#iu', $val, $str);
 		}
 
@@ -613,6 +610,30 @@ if (! function_exists('url_title'))
 		}
 
 		return trim(trim($str, $separator));
+	}
+}
+
+// ------------------------------------------------------------------------
+
+if (! function_exists('mb_url_title'))
+{
+	/**
+	 * Create URL Title that takes into account accented characters
+	 *
+	 * Takes a "title" string as input and creates a
+	 * human-friendly URL string with a "separator" string
+	 * as the word separator.
+	 *
+	 * @param  string  $str       Input string
+	 * @param  string  $separator Word separator (usually '-' or '_')
+	 * @param  boolean $lowercase Whether to transform the output string to lowercase
+	 * @return string
+	 */
+	function mb_url_title(string $str, string $separator = '-', bool $lowercase = false): string
+	{
+		helper('text');
+
+		return url_title(convert_accented_characters($str), $separator, $lowercase);
 	}
 }
 

@@ -38,10 +38,10 @@
 
 namespace CodeIgniter\Router;
 
-use CodeIgniter\HTTP\Request;
-use Config\Services;
 use CodeIgniter\Autoloader\FileLocator;
+use CodeIgniter\HTTP\Request;
 use CodeIgniter\Router\Exceptions\RouterException;
+use Config\Services;
 
 /**
  * Class RouteCollection
@@ -186,14 +186,14 @@ class RouteCollection implements RouteCollectionInterface
 	 *
 	 * @var string
 	 */
-	protected $group = null;
+	protected $group;
 
 	/**
 	 * The current subdomain.
 	 *
 	 * @var string
 	 */
-	protected $currentSubdomain = null;
+	protected $currentSubdomain;
 
 	/**
 	 * Stores copy of current options being
@@ -201,7 +201,7 @@ class RouteCollection implements RouteCollectionInterface
 	 *
 	 * @var null
 	 */
-	protected $currentOptions = null;
+	protected $currentOptions;
 
 	/**
 	 * A little performance booster.
@@ -826,7 +826,7 @@ class RouteCollection implements RouteCollectionInterface
 		// Make sure we capture back-references
 		$id = '(' . trim($id, '()') . ')';
 
-		$methods = isset($options['only']) ? is_string($options['only']) ? explode(',', $options['only']) : $options['only'] : ['index', 'show', 'create', 'update', 'delete', 'new', 'edit'];
+		$methods = isset($options['only']) ? (is_string($options['only']) ? explode(',', $options['only']) : $options['only']) : ['index', 'show', 'create', 'update', 'delete', 'new', 'edit'];
 
 		if (isset($options['except']))
 		{
@@ -941,7 +941,7 @@ class RouteCollection implements RouteCollectionInterface
 		// Make sure we capture back-references
 		$id = '(' . trim($id, '()') . ')';
 
-		$methods = isset($options['only']) ? is_string($options['only']) ? explode(',', $options['only']) : $options['only'] : ['index', 'show', 'new', 'create', 'edit', 'update', 'remove', 'delete'];
+		$methods = isset($options['only']) ? (is_string($options['only']) ? explode(',', $options['only']) : $options['only']) : ['index', 'show', 'new', 'create', 'edit', 'update', 'remove', 'delete'];
 
 		if (isset($options['except']))
 		{
@@ -1214,17 +1214,18 @@ class RouteCollection implements RouteCollectionInterface
 	public function reverseRoute(string $search, ...$params)
 	{
 		// Named routes get higher priority.
-		foreach ($this->routes as $verb => $collection)
+		foreach ($this->routes as $collection)
 		{
 			if (array_key_exists($search, $collection))
 			{
-				return $this->fillRouteParams(key($collection[$search]['route']), $params);
+				$route = $this->fillRouteParams(key($collection[$search]['route']), $params);
+				return $this->localizeRoute($route);
 			}
 		}
 
 		// If it's not a named route, then loop over
 		// all routes to find a match.
-		foreach ($this->routes as $verb => $collection)
+		foreach ($this->routes as $collection)
 		{
 			foreach ($collection as $route)
 			{
@@ -1256,12 +1257,27 @@ class RouteCollection implements RouteCollectionInterface
 					continue;
 				}
 
-				return $this->fillRouteParams($from, $params);
+				$route = $this->fillRouteParams($from, $params);
+				return $this->localizeRoute($route);
 			}
 		}
 
 		// If we're still here, then we did not find a match.
 		return false;
+	}
+
+	//--------------------------------------------------------------------
+
+	/**
+	 * Replaces the {locale} tag with the current application locale
+	 *
+	 * @param string $route
+	 *
+	 * @return string
+	 */
+	protected function localizeRoute(string $route) :string
+	{
+		return strtr($route, ['{locale}' => Services::request()->getLocale()]);
 	}
 
 	//--------------------------------------------------------------------
@@ -1332,7 +1348,7 @@ class RouteCollection implements RouteCollectionInterface
 			// the expected param type.
 			$pos = strpos($from, $pattern);
 
-			if (preg_match("|{$pattern}|", $params[$index]))
+			if (preg_match('#' . $pattern . '#', $params[$index]))
 			{
 				$from = substr_replace($from, $params[$index], $pos, strlen($pattern));
 			}
@@ -1423,18 +1439,22 @@ class RouteCollection implements RouteCollectionInterface
 			$from = str_ireplace(':' . $tag, $pattern, $from);
 		}
 
-		// If no namespace found, add the default namespace
-		if (is_string($to) && (strpos($to, '\\') === false || strpos($to, '\\') > 0))
+		//If is redirect, No processing
+		if (! isset($options['redirect']))
 		{
-			$namespace = $options['namespace'] ?? $this->defaultNamespace;
-			$to        = trim($namespace, '\\') . '\\' . $to;
-		}
+			// If no namespace found, add the default namespace
+			if (is_string($to) && (strpos($to, '\\') === false || strpos($to, '\\') > 0))
+			{
+				$namespace = $options['namespace'] ?? $this->defaultNamespace;
+				$to        = trim($namespace, '\\') . '\\' . $to;
+			}
 
-		// Always ensure that we escape our namespace so we're not pointing to
-		// \CodeIgniter\Routes\Controller::method.
-		if (is_string($to))
-		{
-			$to = '\\' . ltrim($to, '\\');
+			// Always ensure that we escape our namespace so we're not pointing to
+			// \CodeIgniter\Routes\Controller::method.
+			if (is_string($to))
+			{
+				$to = '\\' . ltrim($to, '\\');
+			}
 		}
 
 		$name = $options['as'] ?? $from;

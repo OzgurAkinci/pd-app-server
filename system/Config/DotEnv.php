@@ -77,18 +77,8 @@ class DotEnv
 	public function load(): bool
 	{
 		$vars = $this->parse();
-
-		if ($vars === null)
-		{
-			return false;
-		}
-
-		foreach ($vars as $name => $value)
-		{
-			$this->setVariable($name, $value);
-		}
-
-		return true; // for success
+		
+		return ($vars === null ? false : true);
 	}
 
 	//--------------------------------------------------------------------
@@ -128,7 +118,8 @@ class DotEnv
 			if (strpos($line, '=') !== false)
 			{
 				list($name, $value) = $this->normaliseVariable($line);
-				$vars[$name] = $value;
+				$vars[$name]        = $value;
+				$this->setVariable($name, $value);
 			}
 		}
 
@@ -314,10 +305,8 @@ class DotEnv
 		{
 			case array_key_exists($name, $_ENV):
 				return $_ENV[$name];
-				break;
 			case array_key_exists($name, $_SERVER):
 				return $_SERVER[$name];
-				break;
 			default:
 				$value = getenv($name);
 

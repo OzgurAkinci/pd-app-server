@@ -493,6 +493,7 @@ class CURLRequest extends Request
 			$this->populateHeaders();
 			// Otherwise, it will corrupt the request
 			$this->removeHeader('Host');
+			$this->removeHeader('Accept-Encoding');
 		}
 
 		$headers = $this->getHeaders();
@@ -536,9 +537,7 @@ class CURLRequest extends Request
 		// Have content?
 		if ($size === null || $size > 0)
 		{
-			$curl_options = $this->applyBody($curl_options);
-
-			return $curl_options;
+			return $this->applyBody($curl_options);
 		}
 
 		if ($method === 'PUT' || $method === 'POST')

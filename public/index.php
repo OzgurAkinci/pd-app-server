@@ -1,13 +1,13 @@
 <?php
 /**
 CORS
-**/
+ **/
 header('Access-Control-Allow-Origin: *');
 header("Access-Control-Allow-Headers: X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Request-Method, Authorization");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE");
 $method = $_SERVER['REQUEST_METHOD'];
 if($method == "OPTIONS") {
-die();
+	die();
 }
 
 // Valid PHP Version?
@@ -23,7 +23,7 @@ define('FCPATH', __DIR__ . DIRECTORY_SEPARATOR);
 
 // Location of the Paths config file.
 // This is the line that might need to be changed, depending on your folder structure.
-$pathsPath = FCPATH . '../app/Config/Paths.php';
+$pathsPath = realpath(FCPATH . '../app/Config/Paths.php');
 // ^^^ Change this if you move your application folder
 
 /*
@@ -41,7 +41,6 @@ chdir(__DIR__);
 // Load our paths config file
 require $pathsPath;
 $paths = new Config\Paths();
-define('BASEPATH', str_replace("\\", "/", $paths->systemDirectory));
 
 // Location of the framework bootstrap file.
 $app = require rtrim($paths->systemDirectory, '/ ') . '/bootstrap.php';

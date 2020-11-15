@@ -39,8 +39,8 @@
 
 namespace CodeIgniter\Database;
 
-use CodeIgniter\Events\Events;
 use CodeIgniter\Database\Exceptions\DatabaseException;
+use CodeIgniter\Events\Events;
 
 /**
  * Class BaseConnection
@@ -373,8 +373,15 @@ abstract class BaseConnection implements ConnectionInterface
 
 		$this->connectTime = microtime(true);
 
-		// Connect to the database and set the connection ID
-		$this->connID = $this->connect($this->pConnect);
+		try 
+		{
+			// Connect to the database and set the connection ID
+			$this->connID = $this->connect($this->pConnect);
+		} 
+		catch (\Throwable $e) 
+		{
+			log_message('error', 'Error connecting to the database: ' . $e->getMessage());
+		}
 
 		// No connection resource? Check if there is a failover else throw an error
 		if (! $this->connID)
@@ -394,8 +401,15 @@ abstract class BaseConnection implements ConnectionInterface
 						}
 					}
 
-					// Try to connect
-					$this->connID = $this->connect($this->pConnect);
+					try 
+					{
+						// Try to connect
+						$this->connID = $this->connect($this->pConnect);
+					} 
+					catch (\Throwable $e) 
+					{
+						log_message('error', 'Error connecting to the database: '.$e->getMessage());
+					}
 
 					// If a connection is made break the foreach loop
 					if ($this->connID)
@@ -1002,7 +1016,7 @@ abstract class BaseConnection implements ConnectionInterface
 			$this->initialize();
 		}
 
-		$this->pretend(true);
+		$this->pretend();
 
 		$sql = $func($this);
 
@@ -1381,9 +1395,7 @@ abstract class BaseConnection implements ConnectionInterface
 	{
 		if (is_array($str))
 		{
-			$str = array_map([&$this, 'escape'], $str);
-
-			return $str;
+			return array_map([&$this, 'escape'], $str);
 		}
 		else if (is_string($str) || ( is_object($str) && method_exists($str, '__toString')))
 		{

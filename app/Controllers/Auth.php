@@ -1,87 +1,40 @@
 <?php namespace App\Controllers;
-use \Firebase\JWT\JWT;
-use App\Models\Auth_model;
-use CodeIgniter\RESTful\ResourceController;
 
+use CodeIgniter\RESTful\ResourceController;
+use Config\Services;
+use Firebase\JWT\JWT;
+use App\Models\Auth_model;
 
 class Auth extends ResourceController
 {
+
+	protected $format = 'json';
+	/**
+	 * @var Auth_model
+	 */
+	private $auth;
+
 	public function __construct()
 	{
 		$this->auth = new Auth_model();
 	}
 
-	public function privateKey()
+	public function create()
 	{
-		$privateKey = <<<EOD
-			-----BEGIN RSA PRIVATE KEY-----
-			MIICXAIBAAKBgQC8kGa1pSjbSYZVebtTRBLxBz5H4i2p/llLCrEeQhta5kaQu/Rn
-			vuER4W8oDH3+3iuIYW4VQAzyqFpwuzjkDI+17t5t0tyazyZ8JXw+KgXTxldMPEL9
-			5+qVhgXvwtihXC1c5oGbRlEDvDF6Sa53rcFVsYJ4ehde/zUxo6UvS7UrBQIDAQAB
-			AoGAb/MXV46XxCFRxNuB8LyAtmLDgi/xRnTAlMHjSACddwkyKem8//8eZtw9fzxz
-			bWZ/1/doQOuHBGYZU8aDzzj59FZ78dyzNFoF91hbvZKkg+6wGyd/LrGVEB+Xre0J
-			Nil0GReM2AHDNZUYRv+HYJPIOrB0CRczLQsgFJ8K6aAD6F0CQQDzbpjYdx10qgK1
-			cP59UHiHjPZYC0loEsk7s+hUmT3QHerAQJMZWC11Qrn2N+ybwwNblDKv+s5qgMQ5
-			5tNoQ9IfAkEAxkyffU6ythpg/H0Ixe1I2rd0GbF05biIzO/i77Det3n4YsJVlDck
-			ZkcvY3SK2iRIL4c9yY6hlIhs+K9wXTtGWwJBAO9Dskl48mO7woPR9uD22jDpNSwe
-			k90OMepTjzSvlhjbfuPN1IdhqvSJTDychRwn1kIJ7LQZgQ8fVz9OCFZ/6qMCQGOb
-			qaGwHmUK6xzpUbbacnYrIM6nLSkXgOAwv7XXCojvY614ILTK3iXiLBOxPu5Eu13k
-			eUz9sHyD6vkgZzjtxXECQAkp4Xerf5TGfQXGXhxIX52yH+N2LtujCdkQZjXAsGdm
-			B2zNzvrlgRmgBrklMTrMYgm1NPcW+bRLGcwgW2PTvNM=
-			-----END RSA PRIVATE KEY-----
-			EOD;
-		return $privateKey;
-	}
+		/**
+		 * JWT claim types
+		 * https://auth0.com/docs/tokens/concepts/jwt-claims#reserved-claims
+		 */
 
-	public function register()
-	{
-		$firstname 	= $this->request->getPost('first_name');
-		$lastname 	= $this->request->getPost('last_name');
-		$email 		= $this->request->getPost('email');
-		$password 	= $this->request->getPost('password');
-
-		$password_hash = password_hash($password, PASSWORD_BCRYPT);
-
-		$data = json_decode(file_get_contents("php://input"));
-
-		$dataRegister = [
-			'first_name' => $firstname,
-			'last_name' => $lastname,
-			'email' => $email,
-			'password' => $password_hash
-		];
-
-		$register = $this->auth->register($dataRegister);
-
-		if($register == true){
-			$output = [
-				'status' => 200,
-				'message' => 'Berhasil register'
-			];
-    		return $this->respond($output, 200);
-		} else {
-			$output = [
-				'status' => 400,
-				'message' => 'Gagal register'
-			];
-    		return $this->respond($output, 400);
-		}
-	}
-
-	public function login()
-	{
-		$email 		= $this->request->getPost('email');
-		$password 	= $this->request->getPost('password');
-
-
-
-        //var_dump($this->request);
+		$email = $this->request->getPost('email');
+		$password = $this->request->getPost('password');
 
 		$cek_login = $this->auth->cek_login($email);
 
-		if(password_verify($password, $cek_login['password']))
-		{
-			$secret_key = $this->privateKey();
+		// add code to fetch through db and check they are valid
+		// sending no email and password also works here because both are empty
+		if(password_verify($password, $cek_login['password'])){
+			$secret_key = Services::getSecretKey();
 			$issuer_claim = "THE_CLAIM"; // this can be the servername. Example: https://domain.com
 			$audience_claim = "THE_AUDIENCE";
 			$issuedat_claim = time(); // issued at
@@ -107,22 +60,18 @@ class Auth extends ResourceController
 				'status' => 200,
 				'message' => 'Login successful',
 				"token" => $token,
-                "email" => $email,
-                "firstname" => $cek_login['first_name'],
-
-                "lastname" => $cek_login['last_name'],
-                "expireAt" => $expire_claim,
-                "roles" => ["USER", "ADMIN"]
+				"email" => $email,
+				"firstname" => $cek_login['first_name'],
+				"lastname" => $cek_login['last_name'],
+				"expireAt" => $expire_claim,
+				"roles" => ["USER", "ADMIN"]
 			];
 			return $this->respond($output, 200);
 		} else {
 			$output = [
-				'status' => 401,
-				'message' => 'Login failed' . $password,
-				"password" => $password
+				'status' => 401
 			];
 			return $this->respond($output, 401);
 		}
 	}
-
 }

@@ -40,12 +40,12 @@
 namespace CodeIgniter\I18n;
 
 use CodeIgniter\I18n\Exceptions\I18nException;
-use IntlCalendar;
-use Locale;
-use DateTime;
 use DateInterval;
+use DateTime;
 use DateTimeZone;
+use IntlCalendar;
 use IntlDateFormatter;
+use Locale;
 
 /**
  * Class Time
@@ -423,7 +423,7 @@ class Time extends DateTime
 	 */
 	public function getYear(): string
 	{
-		return $this->toLocalizedString('Y');
+		return $this->toLocalizedString('y');
 	}
 
 	//--------------------------------------------------------------------
@@ -773,14 +773,15 @@ class Time extends DateTime
 	/**
 	 * Returns a new instance with the revised timezone.
 	 *
-	 * @param \DateTimeZone $timezone
+	 * @param string|\DateTimeZone $timezone
 	 *
 	 * @return \CodeIgniter\I18n\Time
 	 * @throws \Exception
 	 */
 	public function setTimezone($timezone)
 	{
-		return Time::parse($this->toDateTimeString(), $timezone, $this->locale);
+		$timezone = $timezone instanceof DateTimeZone ? $timezone : new DateTimeZone($timezone);
+		return Time::instance($this->toDateTime()->setTimezone($timezone), $this->locale);
 	}
 
 	/**

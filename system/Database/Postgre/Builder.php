@@ -40,7 +40,6 @@ namespace CodeIgniter\Database\Postgre;
 
 use CodeIgniter\Database\BaseBuilder;
 use CodeIgniter\Database\Exceptions\DatabaseException;
-use http\Encoding\Stream\Inflate;
 
 /**
  * Builder for Postgre
@@ -196,7 +195,9 @@ class Builder extends BaseBuilder
 			{
 				throw new DatabaseException('You must use the "set" method to update an entry.');
 			}
+			// @codeCoverageIgnoreStart
 			return false;
+			// @codeCoverageIgnoreEnd
 		}
 
 		$table = $this->QBFrom[0];
@@ -269,7 +270,7 @@ class Builder extends BaseBuilder
 	 *
 	 * @return string
 	 */
-	protected function _limit(string $sql): string
+	protected function _limit(string $sql, bool $offsetIgnore = false): string
 	{
 		return $sql . ' LIMIT ' . $this->QBLimit . ($this->QBOffset ? " OFFSET {$this->QBOffset}" : '');
 	}
@@ -316,7 +317,7 @@ class Builder extends BaseBuilder
 	protected function _updateBatch(string $table, array $values, string $index): string
 	{
 		$ids = [];
-		foreach ($values as $key => $val)
+		foreach ($values as $val)
 		{
 			$ids[] = $val[$index];
 
@@ -404,4 +405,29 @@ class Builder extends BaseBuilder
 	}
 
 	//--------------------------------------------------------------------
+
+	/**
+	 * JOIN
+	 *
+	 * Generates the JOIN portion of the query
+	 *
+	 * @param string  $table
+	 * @param string  $cond   The join condition
+	 * @param string  $type   The type of join
+	 * @param boolean $escape Whether not to try to escape identifiers
+	 *
+	 * @return BaseBuilder
+	 */
+	public function join(string $table, string $cond, string $type = '', bool $escape = null)
+	{
+		if (! in_array('FULL OUTER', $this->joinTypes, true))
+		{
+			$this->joinTypes = array_merge($this->joinTypes, ['FULL OUTER']);
+		}
+
+		return parent::join($table, $cond, $type, $escape);
+	}
+
+	//--------------------------------------------------------------------
+
 }

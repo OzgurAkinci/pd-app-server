@@ -148,13 +148,13 @@ class FileHandler implements CacheInterface
 	 *
 	 * @param string $key Cache item name
 	 *
-	 * @return mixed
+	 * @return boolean
 	 */
 	public function delete(string $key)
 	{
 		$key = $this->prefix . $key;
 
-		return is_file($this->path . $key) ? unlink($this->path . $key) : false;
+		return is_file($this->path . $key) && unlink($this->path . $key);
 	}
 
 	//--------------------------------------------------------------------
@@ -228,7 +228,7 @@ class FileHandler implements CacheInterface
 	/**
 	 * Will delete all items in the entire cache.
 	 *
-	 * @return mixed
+	 * @return boolean
 	 */
 	public function clean()
 	{
